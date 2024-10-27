@@ -21,50 +21,44 @@ class TodoPage extends StatelessWidget {
         createTodo: CreateTodo(sl()),
         updateTodo: UpdateTodo(sl()),
         deleteTodo: DeleteTodo(sl()),
-      ),
+      )..add(GetTodosEvent()),
       child: BlocBuilder<TodoBloc, TodoState>(builder: (blocContext, state) {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Todo List'),
           ),
-          body: BlocBuilder<TodoBloc, TodoState>(
-            builder: (context, state) {
-              if (state is TodoLoading) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (state is TodoLoaded) {
-                return ListView.builder(
-                  itemCount: state.todos.length,
-                  itemBuilder: (context, index) {
-                    final todo = state.todos[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(todo.title),
-                        subtitle: Text(todo.description),
-                        trailing: Checkbox(
-                          value: todo.completed,
-                          onChanged: (value) {
-                            context
-                                .read()<TodoBloc>(context)
-                                .add(UpdateTodoStatusEvent(todo.id, value!));
-                          },
-                        ),
-                        onLongPress: () {
-                          context
-                              .read()<TodoBloc>(context)
-                              .add(DeleteTodoEvent(todo.id));
-                        },
-                      ),
-                    );
-                  },
-                );
-              } else if (state is TodoError) {
-                return Center(child: Text(state.message));
-              } else if (state is TodoEmpty) {
-                return const Center(child: Text('No Todos'));
-              }
-              return const Center(child: Text('Unexpected Error'));
-            },
-          ),
+          body: state is TodoLoading
+              ? const Center(child: CircularProgressIndicator())
+              : state is TodoLoaded
+                  ? ListView.builder(
+                      itemCount: state.todos.length,
+                      itemBuilder: (_, index) {
+                        final todo = state.todos[index];
+                        return Card(
+                          child: ListTile(
+                            title: Text(todo.title),
+                            subtitle: Text(todo.description),
+                            trailing: Checkbox(
+                              value: todo.completed,
+                              onChanged: (value) {
+                                blocContext.read<TodoBloc>().add(
+                                    UpdateTodoStatusEvent(todo.id, value!));
+                              },
+                            ),
+                            onLongPress: () {
+                              blocContext
+                                  .read<TodoBloc>()
+                                  .add(DeleteTodoEvent(todo.id));
+                            },
+                          ),
+                        );
+                      },
+                    )
+                  : state is TodoError
+                      ? Center(child: Text(state.message))
+                      : state is TodoEmpty
+                          ? const Center(child: Text('No Todos'))
+                          : const Center(child: Text('Unexpected Error')),
           floatingActionButton: FloatingActionButton(
             onPressed: () => _showCreateTodoDialog(context, blocContext),
             child: const Icon(Icons.add),
@@ -96,10 +90,10 @@ class TodoPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                blocContext.read()<TodoBloc>(blocContext).add(
-                      CreateTodoEvent(
-                          titleController.text, descriptionController.text),
-                    );
+                BlocProvider.of<TodoBloc>(blocContext).add(
+                  CreateTodoEvent(
+                      titleController.text, descriptionController.text),
+                );
                 Navigator.of(context).pop();
                 titleController.clear();
                 descriptionController.clear();

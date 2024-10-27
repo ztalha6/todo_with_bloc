@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/todo.dart';
@@ -35,7 +36,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
         title: event.title,
         description: event.description,
         completed: false,
-        id: '',
+        id: const Uuid().v1(),
       );
       await createTodo(todo);
       add(GetTodosEvent());
